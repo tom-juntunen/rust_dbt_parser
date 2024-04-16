@@ -33,8 +33,6 @@ cp -r dbt-sqlite/dbt/adapters/sqlite venv/lib/python3.8/site-packages/dbt/adapte
 cp -r dbt-sqlite/dbt/include/sqlite venv/lib/python3.8/site-packages/dbt/include && \
 cp -r dbt-sqlite/dbt_sqlite-1.4.0.dist-info venv/lib/python3.8/site-packages
 ```
-
-[text](sample/venv2/lib/python3.8/site-packages/dbt_sqlite-1.4.0.dist-info)
 4. Add the `config` and `sample` objects to ~/.dbt/profiles.yml using this indentation:
     ```
     config:
@@ -69,3 +67,14 @@ cp -r dbt-sqlite/dbt_sqlite-1.4.0.dist-info venv/lib/python3.8/site-packages
 - `cargo clippy`
 3. Run the program
 - `cargo run`
+
+# Release
+1. Build a high-performance release
+- `cargo build --release`
+2. Run the program from the release build
+- `./target/release/dbt_parser my_first_dbt_model`
+
+# Performance
+1. Run `lookalike.py` from `src` directory -> 81ms to parse model from large manifest.
+2. Run rust program from `rust_dbt_parser` directory -> 50ms to parse model from large manifest.
+- This represents a 38% improvement in parsing speed.

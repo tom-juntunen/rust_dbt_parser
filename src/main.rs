@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use std::time::Instant;
 
 // // Structs for catalog.json
 // #[derive(Debug, Deserialize, Serialize)]
@@ -63,7 +64,7 @@ pub struct ManifestNode {
     pub fqn: Vec<String>,
     pub alias: String,
     pub checksum: Checksum,
-    pub config: Config,
+    pub config: Option<Config>,
     pub tags: Vec<String>,
     pub description: Option<String>,
     pub columns: HashMap<String, Column>,
@@ -73,21 +74,21 @@ pub struct ManifestNode {
     pub patch_path: Option<String>,
     pub build_path: Option<String>,
     pub deferred: bool,
-    pub unrendered_config: UnrenderedConfig,
+    // pub unrendered_config: Option<UnrenderedConfig>,
     pub created_at: f64,
     pub relation_name: Option<String>,
     pub raw_code: String,
-    pub language: String,
-    pub refs: Vec<Ref>,
-    pub sources: Vec<serde_json::Value>,
-    pub metrics: Vec<serde_json::Value>,
+    pub language: Option<String>,
+    pub refs: Option<Vec<Ref>>,
+    pub sources: Option<Vec<serde_json::Value>>,
+    pub metrics: Option<Vec<serde_json::Value>>,
     pub depends_on: DependsOn,
-    pub compiled_path: String,
-    pub compiled: bool,
-    pub compiled_code: String,
-    pub extra_ctes_injected: bool,
-    pub extra_ctes: Vec<serde_json::Value>,
-    pub contract: Contract,
+    pub compiled_path: Option<String>,
+    pub compiled: Option<bool>,
+    pub compiled_code: Option<String>,
+    pub extra_ctes_injected: Option<bool>,
+    pub extra_ctes: Option<Vec<serde_json::Value>>,
+    pub contract: Option<Contract>,
     pub access: Option<String>,
     pub constraints: Option<Vec<serde_json::Value>>,
     pub version: Option<String>,
@@ -103,29 +104,50 @@ pub struct Checksum {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
-    pub enabled: bool,
-    pub alias: Option<String>,
-    pub schema: Option<String>,
-    pub database: Option<String>,
-    pub tags: Vec<String>,
-    pub meta: HashMap<String, serde_json::Value>,
-    pub group: Option<String>,
-    pub materialized: Option<String>,
-    pub incremental_strategy: Option<String>,
-    pub persist_docs: Option<HashMap<String, serde_json::Value>>,
-    pub post_hook: Option<Vec<String>>,
-    pub pre_hook: Option<Vec<String>>,
-    pub quoting: Option<HashMap<String, serde_json::Value>>,
-    pub column_types: Option<HashMap<String, serde_json::Value>>,
-    pub full_refresh: Option<bool>,
-    pub unique_key: Option<String>,
-    pub on_schema_change: Option<String>,
-    pub on_configuration_change: Option<String>,
-    pub grants: Option<HashMap<String, serde_json::Value>>,
-    pub packages: Option<Vec<serde_json::Value>>,
-    pub docs: Option<Docs>,
-    pub contract: Option<Contract>,
-    pub access: Option<String>,
+    // pub enabled: bool,
+    // pub alias: Option<String>,
+    // pub schema: Option<String>,
+    // pub database: Option<String>,
+    // pub tags: Option<Vec<String>>,
+    // pub meta: Option<HashMap<String, serde_json::Value>>,
+    // pub group: Option<String>,
+    // pub materialized: Option<String>,
+    // pub incremental_strategy: Option<String>,
+    // pub persist_docs: Option<HashMap<String, serde_json::Value>>,
+    // pub post_hook: Option<Vec<Hook>>,
+    // pub pre_hook: Option<Vec<Hook>>,
+    // pub quoting: Option<HashMap<String, serde_json::Value>>,
+    // pub column_types: Option<HashMap<String, serde_json::Value>>,
+    // pub full_refresh: Option<bool>,
+    pub unique_key: Option<UniqueKey>,
+    // pub on_schema_change: Option<String>,
+    // pub on_configuration_change: Option<String>,
+    // pub grants: Option<HashMap<String, serde_json::Value>>,
+    // pub packages: Option<Vec<serde_json::Value>>,
+    // pub docs: Option<Docs>,
+    // pub contract: Option<Contract>,
+    // pub access: Option<String>,
+    // pub copy_grants: Option<String>,
+    // pub indexes: Option<Vec<Index>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Hook {
+    sql: Option<String>,
+    transaction: Option<bool>,
+    index: Option<u32>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Index {
+    pub columns: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UniqueKey {
+    Multiple(Vec<String>),
+    Single(String),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -136,7 +158,14 @@ pub struct Docs {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UnrenderedConfig {
+    pub copy_grants: Option<String>,
+    pub schema: Option<String>,
     pub materialized: Option<String>,
+    pub incremental_strategy: Option<String>,
+    pub unique_key: Option<UniqueKey>,
+    pub indexes: Option<Vec<Index>>,
+    pub pre_hook: Option<String>,
+    pub post_hook: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -159,8 +188,8 @@ pub struct Ref {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DependsOn {
-    pub macros: Vec<String>,
-    pub nodes: Vec<String>,
+    pub macros: Option<Vec<String>>,
+    pub nodes: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -260,6 +289,7 @@ struct WarnErrorOptions {
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let start = Instant::now();  // Start timing
     // open sample/target/catalog.json and populate the manifest object
     let manifest_path = "sample/target/manifest.json";
     let file = std::fs::File::open(manifest_path)?;
@@ -280,10 +310,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let full_model_name = build_model_key("sample", model_name);
     if let Some(model) = manifest.nodes.get(&full_model_name) {
         println!("Model SQL: {}", model.raw_code);
-        println!("Compiled SQL: {}", model.compiled_code);
+        println!("Compiled SQL: {:?}", model.compiled_code);
     } else {
         println!("Model {} not found under key {}", model_name, full_model_name);
     }
+
+    let duration = start.elapsed();
+    println!("Time elapsed is: {:?}", duration);
 
     Ok(())
 }

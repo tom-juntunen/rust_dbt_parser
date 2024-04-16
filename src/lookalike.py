@@ -1,12 +1,13 @@
 import json
 from datetime import datetime
-now = datetime.now()
+
 
 def build_model_key(prefix, model_name):
     """Constructs a model key with a given prefix and model name."""
     return f"model.{prefix}.{model_name}"
 
 def main():
+    now = datetime.now()
     # Path to the JSON file containing the manifest data
     manifest_path = "sample/target/manifest.json"
     
@@ -25,7 +26,7 @@ def main():
         print(f"Model SQL: {model.get('raw_code', 'No raw SQL found')}")
         print(f"Compiled SQL: {model.get('compiled_code', 'No compiled SQL found')}")
         later = datetime.now()
-        print(f"Program took {later-now} seconds to run.")
+        print(f"Program took {(later-now).total_seconds() * 1000} milliseconds to run.")
     else:
         print(f"Model {model_name} not found under key {full_model_name}")
 
