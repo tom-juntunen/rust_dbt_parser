@@ -169,10 +169,6 @@ pub struct Contract {
     pub checksum: Option<serde_json::Value>,
 }
 
-// Add struct for run_results
-use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
-
 #[derive(Serialize, Deserialize, Debug)]
 struct RunResults {
     metadata: Metadata,
