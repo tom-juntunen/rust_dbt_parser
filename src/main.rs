@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 
 // // Structs for catalog.json
 // #[derive(Debug, Deserialize, Serialize)]
@@ -257,15 +258,25 @@ struct WarnErrorOptions {
 }
 
 
-fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // open sample/target/catalog.json and populate the manifest object
     let manifest_path = "sample/target/manifest.json";
     let file = std::fs::File::open(manifest_path)?;
     let reader = std::io::BufReader::new(file);
     let manifest: Manifest = serde_json::from_reader(reader)?;
 
-    // Return the SQL for a model by passing the model name
-    let model_name = "my_second_dbt_model"; // Change this to your actual model name
+    // Retrieve the model name from command-line arguments
+    let args: Vec<String> = env::args().collect();
+    let model_name = match args.get(1) {
+        Some(name) => name,
+        None => {
+            eprintln!("Please provide the model name as a command-line argument.");
+            return Ok(());
+        }
+    };
+
+    // Build the full model name using the provided model name
     let full_model_name = build_model_key("sample", model_name);
     if let Some(model) = manifest.nodes.get(&full_model_name) {
         println!("Model SQL: {}", model.raw_code);
@@ -276,6 +287,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
 
 fn build_model_key(prefix: &str, model_name: &str) -> String {
     format!("model.{}.{}", prefix, model_name) // Adjust format if your model keys differ
