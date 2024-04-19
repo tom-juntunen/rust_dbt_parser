@@ -2,10 +2,10 @@
 This program parses the dbt manifest and outputs the raw_code and compiled_code for a specified input model.
 In the future, this parser will support parsing more files and doing more things:
 
-(TODO) 1. catalog.json --> producing dbt docs site & documented star schema
-(TODO) 2. graph_summary.json --> producing a heatmap of model execution durations
-3. manifest.json --> producing compiled sql text for writing to app db using models from catalog.json
-(TODO) 4. run_results.json --> producing a table of model execution durations
+1. manifest.json --> producing compiled sql text for writing to app db using models from catalog.json
+2. (TODO) catalog.json --> producing dbt docs site & documented star schema
+3. (TODO) graph_summary.json --> producing a heatmap of model execution durations
+4. (TODO) run_results.json --> producing a table of model execution durations
 
 # Installation
 1. Install Rust for Mac (select standard installation): 
